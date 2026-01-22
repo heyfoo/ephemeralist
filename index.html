@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Ephemeralist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&display=swap');
+      
+      :root {
+        --grid-color: rgba(0, 0, 0, 0.05);
+      }
+
+      body {
+        font-family: 'Fira Code', 'Courier New', monospace;
+        background-color: #faf8f0;
+        background-image: radial-gradient(var(--grid-color) 1px, transparent 1px);
+        background-size: 24px 24px;
+        color: #2d2a2e;
+        overflow: hidden;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #e0ded6;
+        border-radius: 10px;
+      }
+      
+      .artifact-glow {
+        box-shadow: 0 0 20px rgba(247, 127, 0, 0.1);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
+    "framer-motion": "https://esm.sh/framer-motion@^11.0.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
