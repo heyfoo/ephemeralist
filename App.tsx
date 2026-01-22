@@ -218,7 +218,6 @@ const App: React.FC = () => {
       // You could implement a rollback mechanism here
     }
   };
-
   const openSpace = (task: Task) => {
     setActiveSpaceTask(task);
     setViewMode('space');
@@ -301,7 +300,6 @@ const App: React.FC = () => {
           artifacts={artifacts}
           onOpenArtifact={(id) => setArtifacts(prev => prev.map(a => a.id === id ? { ...a, view: 'expanded' } : a))}
           onOpenSpace={openSpace}
-          onToggleCalendar={() => setViewMode('calendar')}
           onDeleteTask={handleDeleteTask}
         />
 

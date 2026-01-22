@@ -132,7 +132,6 @@ export const deleteTasks = async (ids: string[]): Promise<boolean> => {
 
     return true;
 };
-
 // =============== ARTIFACTS ===============
 
 export const loadArtifacts = async (): Promise<Artifact[]> => {

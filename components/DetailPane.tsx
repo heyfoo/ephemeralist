@@ -41,7 +41,6 @@ const DetailPane: React.FC<DetailPaneProps> = ({ task, onUpdate, onClose, allTas
           Metacognition
         </h2>
       </div>
-
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-widest text-stone-400">
