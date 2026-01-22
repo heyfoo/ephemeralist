@@ -6,6 +6,7 @@ interface ArtifactCardProps {
   artifact: Artifact;
   onClick: () => void;
   onDock: (e: React.MouseEvent) => void;
+  onDelete?: (e: React.MouseEvent) => void;
 }
 
 const SparkleIcon = () => (
@@ -18,7 +19,7 @@ const SparkleIcon = () => (
   </motion.div>
 );
 
-const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifact, onClick, onDock }) => {
+const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifact, onClick, onDock, onDelete }) => {
   const isExpanded = artifact.view === 'expanded';
 
   if (isExpanded) {
@@ -73,13 +74,23 @@ const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifact, onClick, onDock }
             </div>
           </div>
           
-          <div className="p-6 bg-stone-50/50 border-t border-stone-100 flex justify-end gap-4">
-            <button 
-              onClick={onDock} 
-              className="px-8 py-3 bg-stone-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-orange-600 hover:shadow-lg transition-all"
-            >
-              Archive Knowledge
-            </button>
+          <div className="p-6 bg-stone-50/50 border-t border-stone-100 flex justify-between gap-4">
+            {onDelete && (
+              <button 
+                onClick={onDelete} 
+                className="px-6 py-3 bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-red-100 hover:text-red-700 transition-all border border-red-200"
+              >
+                Delete Artifact
+              </button>
+            )}
+            <div className="flex gap-4 ml-auto">
+              <button 
+                onClick={onDock} 
+                className="px-8 py-3 bg-stone-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-orange-600 hover:shadow-lg transition-all"
+              >
+                Archive Knowledge
+              </button>
+            </div>
           </div>
         </motion.div>
       </motion.div>
@@ -101,6 +112,14 @@ const ArtifactCard: React.FC<ArtifactCardProps> = ({ artifact, onClick, onDock }
       <div className="flex justify-between items-center">
         <SparkleIcon />
         <div className="flex items-center gap-2">
+          {onDelete && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); onDelete(e); }} 
+              className="opacity-0 group-hover:opacity-100 text-[8px] font-bold uppercase tracking-widest text-red-400 hover:text-red-600 transition-all"
+            >
+              Delete
+            </button>
+          )}
           <button 
             onClick={(e) => { e.stopPropagation(); onDock(e); }} 
             className="opacity-0 group-hover:opacity-100 text-[8px] font-bold uppercase tracking-widest text-stone-300 hover:text-stone-600 transition-all"

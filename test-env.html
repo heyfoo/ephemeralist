@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Environment Configuration Test</h1>
+    <p>This page tests if the API key is properly configured.</p>
+    
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        // Test if we can access the API key
+        const apiKey = typeof process !== 'undefined' && process.env ? process.env.API_KEY : 'Not available';
+        
+        if (apiKey && apiKey !== 'Not available' && apiKey.startsWith('AIza')) {
+            results.innerHTML += `
+                <div class="status success">
+                    ✅ API Key Found: ${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}
+                </div>
+            `;
+        } else {
+            results.innerHTML += `
+                <div class="status error">
+                    ❌ API Key Missing or Invalid: ${apiKey}
+                </div>
+            `;
+        }
+        
+        // Test Vite environment variables
+        if (typeof import !== 'undefined' && import.meta && import.meta.env) {
+            const viteApiKey = import.meta.env.VITE_API_KEY;
+            if (viteApiKey && viteApiKey.startsWith('AIza')) {
+                results.innerHTML += `
+                    <div class="status success">
+                        ✅ Vite API Key Found: ${viteApiKey.substring(0, 10)}...${viteApiKey.substring(viteApiKey.length - 4)}
+                    </div>
+                `;
+            } else {
+                results.innerHTML += `
+                    <div class="status error">
+                        ❌ Vite API Key Missing: ${viteApiKey || 'undefined'}
+                    </div>
+                `;
+            }
+        }
+        
+        // Show environment info
+        results.innerHTML += `
+            <div class="status info">
+                📋 Environment Info:<br>
+                - Node process available: ${typeof process !== 'undefined'}<br>
+                - Import meta available: ${typeof import !== 'undefined' && !!import.meta}<br>
+                - Running in: ${typeof window !== 'undefined' ? 'Browser' : 'Node'}
+            </div>
+        `;
+    </script>
+</body>
+</html>

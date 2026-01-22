@@ -8,8 +8,8 @@ import ArtifactCard from './components/ArtifactCard';
 import SpaceView from './components/SpaceView';
 import { Task, Artifact, DomainType, SpaceContent } from './types';
 import { generateId } from './utils/nlp';
-import { queryAIStream } from './services/geminiService';
-import { loadTasks, saveTasks, loadArtifacts, saveArtifact, deleteTask } from './services/dataService';
+import { queryAIStream } from './services/openrouterService';
+import { loadTasks, saveTasks, loadArtifacts, saveArtifact, deleteTask, deleteArtifact } from './services/dataService';
 import { isSupabaseConfigured } from './services/supabaseClient';
 
 const App: React.FC = () => {
@@ -218,6 +218,25 @@ const App: React.FC = () => {
       // You could implement a rollback mechanism here
     }
   };
+
+  const handleDeleteArtifact = async (artifactId: string) => {
+    // Remove from local state first for immediate UI feedback
+    setArtifacts(prev => prev.filter(a => a.id !== artifactId));
+    
+    // Also remove the artifact ID from any tasks that reference it
+    setTasks(prev => prev.map(task => ({
+      ...task,
+      artifactIds: task.artifactIds?.filter(id => id !== artifactId) || []
+    })));
+    
+    // Delete from database
+    try {
+      await deleteArtifact(artifactId);
+    } catch (error) {
+      console.error('Error deleting artifact:', error);
+      // Optionally restore the artifact if deletion failed
+    }
+  };
   const openSpace = (task: Task) => {
     setActiveSpaceTask(task);
     setViewMode('space');
@@ -273,19 +292,57 @@ const App: React.FC = () => {
         animate={{ width: isSidebarHovered ? 260 : 4 }}
         className="h-screen border-r border-stone-200 bg-white/80 backdrop-blur-md z-[100] relative group flex flex-col"
       >
-        <div className={`p-6 transition-opacity duration-300 ${isSidebarHovered ? 'opacity-100' : 'opacity-0'}`}>
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400 mb-6">Neural Archive</h2>
-          <div className="space-y-3">
-            {dockedArtifacts.map(art => (
-              <div
-                key={art.id}
-                className="p-3 border border-stone-100 rounded bg-stone-50 hover:bg-white cursor-pointer transition-all"
-                onClick={() => setArtifacts(prev => prev.map(a => a.id === art.id ? { ...a, view: 'expanded' } : a))}
-              >
-                <div className="text-[8px] font-bold text-orange-400 uppercase tracking-widest mb-1">{art.domain || 'General'}</div>
-                <div className="text-xs text-stone-600 truncate">{art.query}</div>
-              </div>
-            ))}
+        <div className={`flex-1 flex flex-col transition-opacity duration-300 ${isSidebarHovered ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="p-6 pb-4 shrink-0">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400">Neural Archive</h2>
+            <div className="text-[8px] text-stone-300 mt-1">{dockedArtifacts.length} artifacts</div>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto px-6 pb-6">
+            <div className="space-y-3">
+              {dockedArtifacts.length === 0 ? (
+                <div className="text-center py-8 text-stone-300">
+                  <div className="text-[10px] font-bold uppercase tracking-widest mb-2">Empty Archive</div>
+                  <div className="text-[8px] leading-relaxed">
+                    Create artifacts by pressing Enter<br />
+                    on any task to generate insights
+                  </div>
+                </div>
+              ) : (
+                dockedArtifacts.map(art => (
+                  <div
+                    key={art.id}
+                    className="group/artifact p-3 border border-stone-100 rounded bg-stone-50 hover:bg-white transition-all relative"
+                  >
+                    <div 
+                      className="cursor-pointer"
+                      onClick={() => setArtifacts(prev => prev.map(a => a.id === art.id ? { ...a, view: 'expanded' } : a))}
+                    >
+                      <div className="text-[8px] font-bold text-orange-400 uppercase tracking-widest mb-1">
+                        {art.domain || 'General'}
+                      </div>
+                      <div className="text-xs text-stone-600 line-clamp-2 leading-relaxed pr-6">
+                        {art.query}
+                      </div>
+                      <div className="text-[8px] text-stone-400 mt-2">
+                        {new Date(art.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteArtifact(art.id);
+                      }}
+                      className="absolute top-2 right-2 w-5 h-5 rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 opacity-0 group-hover/artifact:opacity-100 transition-all flex items-center justify-center text-[10px]"
+                      title="Delete artifact"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </motion.aside>
@@ -320,6 +377,10 @@ const App: React.FC = () => {
                     e.stopPropagation();
                     setArtifacts(prev => prev.map(a => a.id === art.id ? { ...a, view: 'docked' } : a));
                   }}
+                  onDelete={(e) => {
+                    e.stopPropagation();
+                    handleDeleteArtifact(art.id);
+                  }}
                 />
               </motion.div>
             ))}
@@ -335,6 +396,10 @@ const App: React.FC = () => {
               onDock={(e) => {
                 e.stopPropagation();
                 setArtifacts(prev => prev.map(a => a.id === art.id ? { ...a, view: 'docked' } : a));
+              }}
+              onDelete={(e) => {
+                e.stopPropagation();
+                handleDeleteArtifact(art.id);
               }}
             />
           ))}

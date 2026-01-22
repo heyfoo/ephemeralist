@@ -8,7 +8,7 @@ import ArtifactCard from './components/ArtifactCard';
 import SpaceView from './components/SpaceView';
 import { Task, Artifact, DomainType, SpaceContent } from './types';
 import { generateId } from './utils/nlp';
-import { queryAIStream } from './services/geminiService';
+import { queryAIStream } from './services/openrouterService';
 import { loadTasks, saveTasks, loadArtifacts, saveArtifact, deleteTask } from './services/dataService';
 import { isSupabaseConfigured } from './services/supabaseClient';
 

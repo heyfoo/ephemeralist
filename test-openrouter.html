@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenRouter Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .error { background-color: #ffe6e6; }
+        .success { background-color: #e6ffe6; }
+    </style>
+</head>
+<body>
+    <h1>OpenRouter Service Test</h1>
+    <button onclick="testOpenRouter()">Test OpenRouter Connection</button>
+    <div id="results"></div>
+
+    <script type="module">
+        import { queryAIStream } from './services/openrouterService.ts';
+
+        // Debug environment variables
+        console.log('Environment variables:', {
+            VITE_OPENROUTER_API_KEY: import.meta.env.VITE_OPENROUTER_API_KEY ? 'Present' : 'Missing',
+            allEnvVars: import.meta.env
+        });
+
+        window.testOpenRouter = async function() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="result">Testing OpenRouter connection...</div>';
+
+            try {
+                await queryAIStream(
+                    "Schedule a 30-minute meeting for tomorrow at 2 PM",
+                    [], // empty tasks array
+                    (chunk) => {
+                        console.log('Chunk received:', chunk);
+                        resultsDiv.innerHTML += `<div class="result success">Chunk: ${chunk}</div>`;
+                    },
+                    (finalData) => {
+                        console.log('Final data:', finalData);
+                        resultsDiv.innerHTML += `<div class="result success">Final: ${JSON.stringify(finalData, null, 2)}</div>`;
+                    }
+                );
+            } catch (error) {
+                console.error('Error:', error);
+                resultsDiv.innerHTML += `<div class="result error">Error: ${error.message}</div>`;
+            }
+        };
+    </script>
+</body>
+</html>

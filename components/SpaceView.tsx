@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Task, DomainType, SpaceContent } from '../types';
-import { queryAIStream } from '../services/geminiService';
+import { queryAIStream } from '../services/openrouterService';
 import { generateId } from '../utils/nlp';
 
 interface SpaceViewProps {

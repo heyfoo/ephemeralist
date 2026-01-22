@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artifact Management Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: white; }
+        .artifact-item { padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 3px; background: #f9f9f9; }
+        .delete-btn { background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        .delete-btn:hover { background: #cc0000; }
+        .success { color: #008800; }
+        .error { color: #cc0000; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Artifact Management Test</h1>
+    <p>This page simulates the neural archive functionality with scrolling and deletion.</p>
+    
+    <div class="test-section">
+        <h2>Neural Archive Simulation</h2>
+        <div id="artifact-count" class="success">0 artifacts</div>
+        <div id="artifact-list" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin: 10px 0;"></div>
+        <button onclick="addTestArtifact()">Add Test Artifact</button>
+        <button onclick="clearAllArtifacts()">Clear All</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Scrolling Test</h2>
+        <p>Add multiple artifacts to test scrolling behavior in the neural archive.</p>
+        <button onclick="addMultipleArtifacts()">Add 10 Test Artifacts</button>
+    </div>
+
+    <script>
+        let artifacts = [];
+        let nextId = 1;
+
+        function updateArtifactDisplay() {
+            const countEl = document.getElementById('artifact-count');
+            const listEl = document.getElementById('artifact-list');
+            
+            countEl.textContent = `${artifacts.length} artifacts`;
+            countEl.className = artifacts.length > 0 ? 'success' : '';
+            
+            if (artifacts.length === 0) {
+                listEl.innerHTML = `
+                    <div style="text-align: center; color: #999; padding: 40px;">
+                        <div style="font-weight: bold; margin-bottom: 10px;">Empty Archive</div>
+                        <div style="font-size: 12px;">Create artifacts by adding test items</div>
+                    </div>
+                `;
+            } else {
+                listEl.innerHTML = artifacts.map(artifact => `
+                    <div class="artifact-item">
+                        <div style="display: flex; justify-between; align-items: start;">
+                            <div style="flex: 1;">
+                                <div style="font-size: 10px; color: #f97316; font-weight: bold; text-transform: uppercase; margin-bottom: 5px;">
+                                    ${artifact.domain}
+                                </div>
+                                <div style="font-size: 12px; color: #666; line-height: 1.4; margin-bottom: 5px;">
+                                    ${artifact.query}
+                                </div>
+                                <div style="font-size: 10px; color: #999;">
+                                    ${artifact.created_at}
+                                </div>
+                            </div>
+                            <button class="delete-btn" onclick="deleteArtifact('${artifact.id}')" title="Delete artifact">
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function addTestArtifact() {
+            const domains = ['Research', 'Entrepreneurship', 'Academic', 'Personal', 'General'];
+            const queries = [
+                'How to implement smart scheduling algorithms?',
+                'Best practices for React component architecture',
+                'Understanding neural networks and deep learning',
+                'Effective time management strategies',
+                'Building scalable web applications',
+                'Machine learning model optimization',
+                'User experience design principles',
+                'Database design and normalization',
+                'API security best practices',
+                'Agile development methodologies'
+            ];
+
+            const artifact = {
+                id: `artifact_${nextId++}`,
+                domain: domains[Math.floor(Math.random() * domains.length)],
+                query: queries[Math.floor(Math.random() * queries.length)],
+                created_at: new Date().toLocaleDateString(),
+                content: 'Generated artifact content...'
+            };
+
+            artifacts.push(artifact);
+            updateArtifactDisplay();
+        }
+
+        function deleteArtifact(id) {
+            const index = artifacts.findIndex(a => a.id === id);
+            if (index !== -1) {
+                artifacts.splice(index, 1);
+                updateArtifactDisplay();
+                console.log(`Deleted artifact: ${id}`);
+            }
+        }
+
+        function clearAllArtifacts() {
+            artifacts = [];
+            updateArtifactDisplay();
+        }
+
+        function addMultipleArtifacts() {
+            for (let i = 0; i < 10; i++) {
+                addTestArtifact();
+            }
+        }
+
+        // Initialize display
+        updateArtifactDisplay();
+
+        // Test scrolling behavior
+        console.log('Artifact management test loaded. Try adding multiple artifacts to test scrolling.');
+    </script>
+</body>
+</html>

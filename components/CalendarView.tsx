@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Task } from '../types';
 import { COLORS } from '../constants';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getScheduledSlots, checkSchedulingConflict, timeSlotsOverlap, timeToMinutes } from '../utils/scheduling';
 
 interface CalendarViewProps {
   tasks: Task[];
@@ -48,6 +49,34 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onBack, onNavigateTo
     return tasks
       .filter(t => t.meta.deadlineISO === selectedDateISO)
       .sort((a, b) => (a.meta.startTime || '00:00').localeCompare(b.meta.startTime || '00:00'));
+  }, [tasks, selectedDateISO]);
+
+  // Detect conflicts for the selected date
+  const conflictInfo = useMemo(() => {
+    if (!selectedDateISO) return { hasConflicts: false, conflictingTasks: [] };
+    
+    const scheduledSlots = getScheduledSlots(tasks, selectedDateISO);
+    const conflictingTasks: Task[] = [];
+    
+    // Check each task against all others
+    for (let i = 0; i < scheduledSlots.length; i++) {
+      for (let j = i + 1; j < scheduledSlots.length; j++) {
+        const slot1 = scheduledSlots[i];
+        const slot2 = scheduledSlots[j];
+        
+        if (timeSlotsOverlap(slot1.start, slot1.end, slot2.start, slot2.end)) {
+          const task1 = tasks.find(t => t.id === slot1.taskId);
+          const task2 = tasks.find(t => t.id === slot2.taskId);
+          if (task1 && !conflictingTasks.some(t => t.id === task1.id)) conflictingTasks.push(task1);
+          if (task2 && !conflictingTasks.some(t => t.id === task2.id)) conflictingTasks.push(task2);
+        }
+      }
+    }
+    
+    return {
+      hasConflicts: conflictingTasks.length > 0,
+      conflictingTasks
+    };
   }, [tasks, selectedDateISO]);
 
   const handleTeleport = (task: Task) => {
@@ -99,17 +128,28 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onBack, onNavigateTo
             const dateISO = formatDateISO(date);
             const dayTasks = tasks.filter(t => t.meta.deadlineISO === dateISO);
             const isToday = dateISO === todayISO;
+            
+            // Check for conflicts on this day
+            const dayScheduledSlots = getScheduledSlots(tasks, dateISO);
+            const hasConflicts = dayScheduledSlots.some((slot1, i) => 
+              dayScheduledSlots.some((slot2, j) => 
+                i < j && timeSlotsOverlap(slot1.start, slot1.end, slot2.start, slot2.end)
+              )
+            );
 
             return (
               <div 
                 key={dateISO} 
                 onClick={() => setSelectedDateISO(dateISO)}
-                className={`relative p-3 border-b border-r border-stone-100 min-h-[140px] group cursor-pointer transition-all hover:bg-white ${isToday ? 'bg-orange-50/20' : ''}`}
+                className={`relative p-3 border-b border-r border-stone-100 min-h-[140px] group cursor-pointer transition-all hover:bg-white ${isToday ? 'bg-orange-50/20' : ''} ${hasConflicts ? 'bg-red-50/30 border-red-200' : ''}`}
               >
                 <div className="flex justify-between items-start mb-3">
                   <span className={`text-xs font-mono select-none ${isToday ? 'text-orange-500 font-bold' : 'text-stone-400'}`}>
                     {date.getDate()}
                   </span>
+                  {hasConflicts && (
+                    <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" title="Scheduling conflicts detected" />
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   {dayTasks.slice(0, 4).map(task => (
@@ -136,6 +176,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onBack, onNavigateTo
                 <div>
                   <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-orange-400 mb-1">Temporal Alignment</h2>
                   <h3 className="text-xl font-light text-stone-800">{new Date(selectedDateISO).toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' })}</h3>
+                  {conflictInfo.hasConflicts && (
+                    <div className="mt-2 px-3 py-1 bg-red-100 border border-red-200 rounded-full">
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-red-600">
+                        ⚠️ {conflictInfo.conflictingTasks.length} Scheduling Conflicts
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <button onClick={() => setSelectedDateISO(null)} className="w-10 h-10 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-400">✕</button>
               </div>
@@ -148,29 +195,35 @@ const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onBack, onNavigateTo
                 ) : (
                   <div className="relative pl-12 space-y-8">
                     <div className="absolute left-4 top-2 bottom-2 w-px bg-stone-100" />
-                    {selectedDateTasks.map((task) => (
-                      <div key={task.id} className={`relative group/item ${task.tag === 'Neural Reset' ? 'opacity-40' : ''}`}>
-                        <div className={`absolute -left-10 top-1 w-4 h-4 rounded-full border-2 border-white shadow-sm transition-transform group-hover/item:scale-125`} style={{ backgroundColor: COLORS.tags[task.tag] || COLORS.bullet }} />
-                        
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-3">
-                            <span className="text-[11px] font-bold font-mono text-stone-400 tabular-nums">{task.meta.startTime || '--:--'}</span>
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-stone-300 bg-stone-50 px-2 py-0.5 rounded">{task.meta.durationMinutes}m</span>
-                            {task.meta.domain && (
-                              <button 
-                                onClick={() => handleTeleport(task)}
-                                className="text-[8px] font-bold uppercase tracking-widest text-orange-400 ml-auto hover:text-orange-600 border border-transparent hover:border-orange-200 px-2 py-0.5 rounded transition-all"
-                              >
-                                Teleport to Hub ↗
-                              </button>
-                            )}
-                          </div>
+                    {selectedDateTasks.map((task) => {
+                      const isConflicting = conflictInfo.conflictingTasks.some(ct => ct.id === task.id);
+                      return (
+                        <div key={task.id} className={`relative group/item ${task.tag === 'Neural Reset' ? 'opacity-40' : ''} ${isConflicting ? 'bg-red-50/50 border border-red-200 rounded-lg p-3 -ml-3' : ''}`}>
+                          <div className={`absolute -left-10 top-1 w-4 h-4 rounded-full border-2 border-white shadow-sm transition-transform group-hover/item:scale-125 ${isConflicting ? 'ring-2 ring-red-300' : ''}`} style={{ backgroundColor: COLORS.tags[task.tag] || COLORS.bullet }} />
                           
-                          <h4 className={`text-base font-medium ${task.isCompleted ? 'text-stone-300 line-through' : 'text-stone-800'}`}>{task.content}</h4>
-                          {task.meta.why && <p className="text-[10px] text-stone-400 italic leading-relaxed mt-1">"{task.meta.why}"</p>}
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-3">
+                              <span className={`text-[11px] font-bold font-mono tabular-nums ${isConflicting ? 'text-red-600' : 'text-stone-400'}`}>{task.meta.startTime || '--:--'}</span>
+                              <span className={`text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${isConflicting ? 'text-red-600 bg-red-100' : 'text-stone-300 bg-stone-50'}`}>{task.meta.durationMinutes}m</span>
+                              {isConflicting && (
+                                <span className="text-[8px] font-bold uppercase tracking-widest text-red-500 bg-red-100 px-2 py-0.5 rounded">CONFLICT</span>
+                              )}
+                              {task.meta.domain && (
+                                <button 
+                                  onClick={() => handleTeleport(task)}
+                                  className="text-[8px] font-bold uppercase tracking-widest text-orange-400 ml-auto hover:text-orange-600 border border-transparent hover:border-orange-200 px-2 py-0.5 rounded transition-all"
+                                >
+                                  Teleport to Hub ↗
+                                </button>
+                              )}
+                            </div>
+                            
+                            <h4 className={`text-base font-medium ${task.isCompleted ? 'text-stone-300 line-through' : isConflicting ? 'text-red-700' : 'text-stone-800'}`}>{task.content}</h4>
+                            {task.meta.why && <p className="text-[10px] text-stone-400 italic leading-relaxed mt-1">"{task.meta.why}"</p>}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })})
                   </div>
                 )}
               </div>

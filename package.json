@@ -6,10 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build-css": "tailwindcss -i ./index.css -o ./index.css"
   },
   "dependencies": {
-    "@google/genai": "^1.37.0",
     "@supabase/supabase-js": "^2.91.0",
     "framer-motion": "^11.0.0",
     "react": "^19.2.3",
