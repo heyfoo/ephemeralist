@@ -15,6 +15,7 @@ interface NotepadProps {
   onOpenArtifact: (id: string) => void;
   onOpenSpace: (task: Task) => void;
   onToggleCalendar: () => void;
+  onDeleteTask: (taskId: string) => void;
 }
 
 const Notepad: React.FC<NotepadProps> = ({ 
@@ -26,7 +27,8 @@ const Notepad: React.FC<NotepadProps> = ({
   artifacts, 
   onOpenArtifact, 
   onOpenSpace,
-  onToggleCalendar
+  onToggleCalendar,
+  onDeleteTask
 }) => {
   const inputRefs = useRef<Map<string, HTMLInputElement>>(new Map());
 
@@ -91,7 +93,7 @@ const Notepad: React.FC<NotepadProps> = ({
       e.preventDefault();
       const prevTask = visibleTasks[indexInVisible - 1];
       if (prevTask) {
-        setTasks(tasks.filter(t => t.id !== task.id));
+        onDeleteTask(task.id);
         setTimeout(() => inputRefs.current.get(prevTask.id)?.focus(), 10);
       }
     }
@@ -185,12 +187,30 @@ const Notepad: React.FC<NotepadProps> = ({
               ))}
             </div>
 
-            <button 
-              onClick={() => onFocusTask(task)} 
-              className="ml-4 opacity-0 group-hover:opacity-100 text-stone-300 hover:text-stone-500 text-xs p-1"
-            >
-              ⋯
-            </button>
+            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button 
+                onClick={() => onFocusTask(task)} 
+                className="text-stone-300 hover:text-stone-500 text-xs p-1"
+                title="View details"
+              >
+                ⋯
+              </button>
+              
+              {visibleTasks.length > 1 && (
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (window.confirm('Delete this task? This action cannot be undone.')) {
+                      onDeleteTask(task.id);
+                    }
+                  }}
+                  className="text-stone-300 hover:text-red-400 text-xs p-1 transition-colors"
+                  title="Delete task"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>

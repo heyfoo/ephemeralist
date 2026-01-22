@@ -35,6 +35,12 @@ const DetailPane: React.FC<DetailPaneProps> = ({ task, onUpdate, onClose, allTas
 
   return (
     <div className="h-full w-full bg-[#faf8f0] border-l border-stone-200 p-8 flex flex-col overflow-y-auto animate-in slide-in-from-right duration-300">
+      {/* Metacognition Title */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-light tracking-wide text-stone-600 font-mono">
+          Metacognition
+        </h2>
+      </div>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-widest text-stone-400">

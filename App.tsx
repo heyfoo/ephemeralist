@@ -9,7 +9,7 @@ import SpaceView from './components/SpaceView';
 import { Task, Artifact, DomainType, SpaceContent } from './types';
 import { generateId } from './utils/nlp';
 import { queryAIStream } from './services/geminiService';
-import { loadTasks, saveTasks, loadArtifacts, saveArtifact } from './services/dataService';
+import { loadTasks, saveTasks, loadArtifacts, saveArtifact, deleteTask } from './services/dataService';
 import { isSupabaseConfigured } from './services/supabaseClient';
 
 const App: React.FC = () => {
@@ -197,6 +197,27 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDeleteTask = async (taskId: string) => {
+    // Find all child tasks (AI subtasks) that should be deleted along with the parent
+    const childTasks = tasks.filter(t => t.meta.parentTaskId === taskId);
+    const allTasksToDelete = [taskId, ...childTasks.map(t => t.id)];
+    
+    // Delete from local state first for immediate UI feedback
+    setTasks(prev => prev.filter(t => !allTasksToDelete.includes(t.id)));
+    
+    // Delete from database
+    try {
+      await deleteTask(taskId);
+      // Delete child tasks if any
+      for (const childTask of childTasks) {
+        await deleteTask(childTask.id);
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      // Optionally restore the task if deletion failed
+      // You could implement a rollback mechanism here
+    }
+  };
   const openSpace = (task: Task) => {
     setActiveSpaceTask(task);
     setViewMode('space');
@@ -279,7 +300,7 @@ const App: React.FC = () => {
           artifacts={artifacts}
           onOpenArtifact={(id) => setArtifacts(prev => prev.map(a => a.id === id ? { ...a, view: 'expanded' } : a))}
           onOpenSpace={openSpace}
-          onToggleCalendar={() => setViewMode('calendar')}
+          onDeleteTask={handleDeleteTask}
         />
 
         <div className="fixed inset-0 z-[80] pointer-events-none overflow-hidden">

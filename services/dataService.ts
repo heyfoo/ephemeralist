@@ -116,6 +116,22 @@ export const deleteTask = async (id: string): Promise<boolean> => {
     return true;
 };
 
+export const deleteTasks = async (ids: string[]): Promise<boolean> => {
+    if (!isSupabaseConfigured() || !supabase) return false;
+    if (ids.length === 0) return true;
+
+    const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .in('id', ids);
+
+    if (error) {
+        console.error('Error deleting tasks:', error);
+        return false;
+    }
+
+    return true;
+};
 // =============== ARTIFACTS ===============
 
 export const loadArtifacts = async (): Promise<Artifact[]> => {
