@@ -106,7 +106,7 @@ export const queryAIStream = async (
   `;
 
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch('https://openrouter.ai/api/v1/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${client.apiKey}`,
