@@ -4,11 +4,6 @@ import { generateScheduleContext, checkSchedulingConflict } from "../utils/sched
 const getOpenRouterClient = () => {
   try {
     const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-    console.log('Environment check:', {
-      hasApiKey: !!apiKey,
-      apiKeyLength: apiKey?.length || 0,
-      apiKeyStart: apiKey?.substring(0, 10) || 'undefined'
-    });
     if (!apiKey) return null;
     return { apiKey };
   } catch (e) {
@@ -106,7 +101,7 @@ export const queryAIStream = async (
   `;
 
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/completions', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${client.apiKey}`,
@@ -115,7 +110,7 @@ export const queryAIStream = async (
         'X-Title': 'The Ephemeralist'
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-exp:free', // Using free Gemini model via OpenRouter
+        model: 'google/gemini-2.0-flash-001', // Using Gemini 2.0 Flash 001 via OpenRouter
         messages: [
           {
             role: 'user',
@@ -170,7 +165,7 @@ export const queryAIStream = async (
             if (conflict.hasConflict) {
               const conflictingTaskNames = conflict.conflictingTasks.map(t => t.content).join(', ');
               conflictWarnings.push(`⚠️ CONFLICT: "${task.content}" at ${task.startTime} conflicts with: ${conflictingTaskNames}`);
-              
+
               // Try to reschedule to suggested time
               if (conflict.suggestedTime) {
                 task.startTime = conflict.suggestedTime;
